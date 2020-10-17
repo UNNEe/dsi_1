@@ -45,6 +45,7 @@ class HomePage extends StatelessWidget {
                     ),
                 )
             ),
+            
             Assets.smallPaddingBox,
             Row(
               children: [

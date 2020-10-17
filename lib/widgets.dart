@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:projeto_3/assets_handler.dart';
 import 'package:projeto_3/Receitas.dart';
 import 'package:projeto_3/Categorias.dart';
+import 'package:projeto_3/http%20service.dart';
 import 'package:projeto_3/infra.dart';
 
 class searchBar extends StatefulWidget {
@@ -33,37 +34,13 @@ class _searchBar extends State<searchBar> {
           backgroundColor: Assets.whiteColor,
           body: Column(
             children: [
-              InteliBar(
-                leftIcon: Icons.arrow_back,
-                leftPath: '/',
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              SearchBar(
-                colorIcon: Assets.whiteColor,
-                isForm: true,
-              ),
-              ColectionBar(),
-              TextBar(
-                texto: 'teste',
-                color: Assets.blackColorPlaceholder,
-                padding: 3,
-              ),
-              TextFormField(
-                controller: _controler,
-                onTap: () {
-                  setState(() {
-                    _controler.clear();
-                  });
-                },
-              )
-              //ReceitaDisplay(titulo:null,ingredientes: [null,null],tempo: null,height_main: 230,image: Assets.Placeholder4,),
+              RecipePage()
             ],
+          )
+
           ),
         ),
-      ),
-    );
+      );
   }
 } // area de teste
 
@@ -183,6 +160,7 @@ class SearchBar extends StatefulWidget {
   double barSize;
   bool isForm;
   String path, action;
+  Function onSaved;
 
   SearchBar(
       {this.isForm,
@@ -190,7 +168,8 @@ class SearchBar extends StatefulWidget {
       this.colorIcon,
       this.barSize,
       this.path,
-      this.action});
+      this.action,
+      this.onSaved});
 
   @override
   _SearchBarState createState() => _SearchBarState();
@@ -198,6 +177,7 @@ class SearchBar extends StatefulWidget {
 
 class _SearchBarState extends State<SearchBar> {
   var _controller = TextEditingController();
+  var formkey = GlobalKey<FormState>();
 
   void _ShowModal(BuildContext context) {
     showModalBottomSheet(
@@ -247,73 +227,56 @@ class _SearchBarState extends State<SearchBar> {
     if (isform == true) {
       return Expanded(
         child: Container(
-          child: Row(
-            children: [
-              Assets.smallPaddingBox,
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(1.0),
-                  child: TextFormField(
-                    autofocus: true,
-                    controller: _controller,
-                    onTap: () {
-                      setState(() {
-                        _controller.selection = TextSelection(
-                            baseOffset: 0,
-                            extentOffset: _controller.text.length);
-                      });
-                    },
-                    decoration: InputDecoration(
-                      hintText: "pesquisar",
+          child: Form(
+            key: formkey,
+            child: Row(
+              children: [
+                Assets.smallPaddingBox,
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(1.0),
+                    child: TextFormField(
+                      onSaved: widget.onSaved,
+                      autofocus: true,
+                      controller: _controller,
+                      onTap: () {
+                        setState(() {
+                          _controller.selection = TextSelection(
+                              baseOffset: 0,
+                              extentOffset: _controller.text.length);
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: "pesquisar",
+                      ),
                     ),
                   ),
                 ),
-              ),
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    print(_controller.text);
-                  });
-                },
-                icon: Icon(Icons.search),
-              )
-            ],
+                IconButton(
+                  onPressed: () {
+                    formkey.currentState.save();
+                  },
+                  icon: Icon(Icons.search),
+                )
+              ],
+            ),
           ),
-//          child: TextFormField(
-//            controller: _controller,
-//            style: InriaSansStyle(
-//              color: Assets.darkGreyColor,
-//              size: 18,
-//              fontStyle: FontStyle.italic,
-//            ).get(),
-//            decoration: InputDecoration(
-//              contentPadding: EdgeInsets.all(8),
-//              hintText: "Pesquisar",
-//              suffixIcon: IconButton(
-//                  icon: Icon(Icons.clear),
-//                  color: Colors.black,
-//                  onPressed: () {
-//                    print('this');
-//                    _controller.clear();
-//                  }),
-//            ),
-//          ),
         ),
       );
     } else
       return Expanded(
         child: Container(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 0),
-              child: Row(
-                children: [
-                  Assets.smallPaddingBox,
-                  Text("Pesquisar...", style: Assets.inriaSans18dim),
-                  Spacer(),
-                  Icon(Icons.search, color: setColor(widget.colorIcon))
-                ],
-              ),
-            )),
+          padding: const EdgeInsets.only(bottom: 0),
+          child: Row(
+            children: [
+              Assets.smallPaddingBox,
+              Text("Pesquisar...", style: Assets.inriaSans18dim),
+              Spacer(),
+              Icon(Icons.search, color: setColor(widget.colorIcon))
+            ],
+          ),
+        )),
       );
   }
 
@@ -350,7 +313,7 @@ class _SearchBarState extends State<SearchBar> {
 
 class ReceitaDisplay extends StatelessWidget {
   String titulo;
-  List ingredientes, preparo;
+  var ingredientes, preparo;
   var tempo;
   double height_main;
   AssetImage image;
@@ -645,14 +608,22 @@ class ColectionBar extends StatelessWidget {
   }
 } // Um listView dos Tiles das categorias
 
-class RecommendedDisplay extends StatelessWidget {
+class RecommendedDisplay extends StatefulWidget {
+  @override
+  _RecommendedDisplayState createState() => _RecommendedDisplayState();
+}
+
+class _RecommendedDisplayState extends State<RecommendedDisplay> {
   var _recomendedList = recomendadoController.getAll();
+
 
   @override
   Widget build(BuildContext context) {
-    print(_recomendedList.length);
+    var len = _recomendedList.length + 1;
+//    print(len);
     return Expanded(
       child: Container(
+        width: Helper.getScreenWidth(context) - 16,
         decoration: BoxDecoration(
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             color: Assets.darkGreyColor),
@@ -672,7 +643,7 @@ class RecommendedDisplay extends StatelessWidget {
               child: Container(
                 child: ListView.builder(
                   padding: EdgeInsets.all(1),
-                  itemCount: (1),
+                  itemCount: len,
                   itemBuilder: _buildList,
                 ),
               ),
@@ -687,8 +658,8 @@ class RecommendedDisplay extends StatelessWidget {
     var item;
     if (_recomendedList.length == 0) {
       item = Receita();
-    }
-    else item = _recomendedList[index];
+    } else
+      item = _recomendedList[index];
     return ListTile(
       title: _alterDisplay(
         index,
@@ -701,7 +672,6 @@ class RecommendedDisplay extends StatelessWidget {
         Center(
           child: TextBar(
             path: '/food_display',
-            //todo: area de recomendado
             action: 'go',
             texto: "mais...",
             size: 20,
@@ -711,7 +681,7 @@ class RecommendedDisplay extends StatelessWidget {
         ),
       ),
     );
-  }
+  }//todo: area de recomendado
 
   _alterDisplay(index, widget1, widget2) {
     if (index < _recomendedList.length)
@@ -733,81 +703,78 @@ class _ModalSearchPageState extends State<ModalSearchPage> {
 
   var list;
 
-  _fetchData(pesquisa) async{
+  _fetchData(pesquisa) async {
+    pesquisaController.clear();
     setState(() {
       isLoading = true;
     });
     final response =
-    await http.get("http://87f32e69d5a6.ngrok.io/get_recommended");
+        await http.get("${pathControler.getPath()}search_name/$pesquisa");
 
-    setState(() {
-      isLoading = false;
-    });
+
     texto = response.body.toString();
     return mapData(response.body.toString());
   }
 
-  mapData(String jsonString){
+  mapData(String jsonString) {
     Map<String, dynamic> jsonmap = jsonDecode(jsonString);
-    jsonmap['recommended']
-        .map<Receita>((json)=> Receita.fromJson(json))
+    jsonmap['pesquisa']
+        .map<Receita>((json) => Receita.fromJson(json))
         .toList()
-        .forEach((receita)=> receitaController.save(receita));
-    Receita a = pesquisaController.getAll()[1];
-    print([a.titulo,a.tempo,a.image,a.nIngredientes,a.index,a.preparo,a.tipo]);
-
+        .forEach((receita) => pesquisaController.save(receita));
+    _items = pesquisaController.getAll();
+    setState(() {
+      isLoading = false;
+    });
   }
 
-  final _items = pesquisaController.getAll();
+  var _items = pesquisaController.getAll();
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        FocusScopeNode currentFocus = FocusScope.of(context);
-        if (!currentFocus.hasPrimaryFocus) {
-          currentFocus.unfocus();
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            color: Assets.darkGreyColor),
-        clipBehavior: Clip.antiAlias,
-        height: Helper.getScreenHeight(context) - 25,
-        width: Helper.getScreenWidth(context),
-        child: isLoading
-        ?  Center(child: CircularProgressIndicator()): Column(
-          children: [
-            Assets.smallPaddingBox,
-            Hero(
-              // animaçao entre as telas
-                tag: 'searchbar',
-                child: Material(
-                  color: Colors.transparent,
-                  child: SearchBar(
-                    colorMain: Assets.whiteColor,
-                    colorIcon: Assets.blackColorPlaceholder,
-                    barSize: 30,
-                    isForm: true,
-                  ),
-                )),
-            Assets.smallPaddingBox,
-            Expanded(
-              child: Container(
-                child: ListView.builder(
-                  scrollDirection: Axis.vertical,
-                  padding: EdgeInsets.all(0),
-                  itemCount: _items.length,
-                  itemBuilder: _buildListTile,
+        onTap: () {
+          FocusScopeNode currentFocus = FocusScope.of(context);
+          if (!currentFocus.hasPrimaryFocus) {
+            currentFocus.unfocus();
+          }
+        },
+        child: Container(
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                color: Assets.darkGreyColor),
+            clipBehavior: Clip.antiAlias,
+            height: Helper.getScreenHeight(context) - 25,
+            width: Helper.getScreenWidth(context),
+            child: Column(
+              children: [
+                Assets.smallPaddingBox,
+                SearchBar(
+                  colorMain: Assets.whiteColor,
+                  colorIcon: Assets.blackColorPlaceholder,
+                  barSize: 30,
+                  isForm: true,
+                  onSaved: (input) {
+                    setState(() {
+                      _fetchData(input);
+                    });
+                  },
                 ),
-              ),
-            ),
-          ],
-        )
-
-      ),
-    );
+                Assets.smallPaddingBox,
+                isLoading
+                    ? Center(child: CircularProgressIndicator())
+                    : Expanded(
+                        child: Container(
+                          child: ListView.builder(
+                            scrollDirection: Axis.vertical,
+                            padding: EdgeInsets.all(0),
+                            itemCount: _items.length,
+                            itemBuilder: _buildListTile,
+                          ),
+                        ),
+                      ),
+              ],
+            )));
   }
 
   Widget _buildListTile(context, index) {
@@ -836,9 +803,85 @@ class _ModalSearchPageState extends State<ModalSearchPage> {
   }
 } // Modal de pesquisa que pertence a aba SearchBar
 
-class ReceitaPage extends StatelessWidget {
+class RecipePage extends StatelessWidget {
+  String titulo;
+  String ingredientes;
+  String preparo;
+  String tempo;
+
+
+  RecipePage({
+    this.titulo = 'none',
+    this.ingredientes = "[1,2,3,4]",
+    this.preparo = "[1,2,3,4]",
+    this.tempo = "10",
+  });
+
   @override
-  Widget build(BuildContext Context) {
-    return Scaffold();
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        margin: new EdgeInsets.all(10.0),
+        child: new Material(
+          elevation: 4.0,
+          borderRadius: new BorderRadius.circular(6.0),
+          child: new ListView(
+            children: <Widget>[
+              _getBody(titulo, tempo, preparo, ingredientes),
+            ],
+          ),
+        ),
+      ),
+    );
   }
+
+  Widget _getBody(titulo, tempo, preparo, ingredientes) {
+    return new Container(
+      margin: new EdgeInsets.all(15.0),
+      child: new Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          _getTitle(titulo),
+          _getTime(tempo),
+          _getPreparation(preparo),
+          _getIngredients(ingredientes),
+        ],
+      ),
+    );
+  }
+
+  _getTitle(titulo) {
+    return new Text(titulo,
+      style: new TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 20.0),
+    );
+  }
+
+  _getTime(tempo) {
+    return new Container(
+        margin: new EdgeInsets.only(top: 5.0),
+        child: new Text(tempo,
+          style: new TextStyle(
+              fontSize: 10.0,
+              color: Colors.grey
+          ),
+        )
+    );
+  }
+
+  _getPreparation(preparo) {
+    return new Container(
+      margin: new EdgeInsets.only(top: 20.0),
+      child: new Text(preparo),
+    );
+  }
+
+  _getIngredients(ingredientes) {
+    return new Container(
+      margin: new EdgeInsets.only(top: 20.0),
+      child: new Text(ingredientes),
+    );
+  }
+
 } // todo: pagina de likes, pagina de receitas.

@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'Categorias.dart';
 import 'assets_handler.dart';
 import 'blocs/theme.dart';
+import 'http service.dart';
 import 'infra.dart';
 import 'recommended_display.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +13,7 @@ import 'settings.dart';
 import 'Receitas.dart';
 import 'home_page.dart';
 import 'widgets.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   dbInit();
@@ -57,6 +58,7 @@ _buildRoutes(context) {
     '/test_area': (context) => searchBar(),
   };
 }
+
 ///_processData(jsonString) {
 ///  Map<String, dynamic> jsonMaps = jsonDecode(jsonString);
 ///  jsonMaps['alunos']
@@ -72,65 +74,62 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPage extends State<SplashPage> {
-  bool isLoading = false;
+  bool isLoading = true;
   var texto = '';
-  var list;
-  _fetchData() async{
-    setState(() {
-      isLoading = true;
-    });
-    final response =
-        await http.get("http://87f32e69d5a6.ngrok.io/get_recommended");
+  var formkey = GlobalKey<FormState>();
 
-    setState(() {
-      isLoading = false;
-    });
+  _fetchData() async {
+    print(pathControler.getPath());
+    if (pathControler.getPath() == null){
+      Future wait = Future.delayed(Duration(seconds: 3));
+      wait.then((value) => Helper.go(context, '/home_page'));
+      return null;
+    }
+    final response =
+    await http.get("${pathControler.getPath()}get_recommended");
     texto = response.body.toString();
     return mapData(response.body.toString());
   }
-  mapData(String jsonString){
+
+  mapData(String jsonString) {
     Map<String, dynamic> jsonmap = jsonDecode(jsonString);
     jsonmap['recommended']
-        .map<Receita>((json)=> Receita.fromJson(json))
+        .map<Receita>((json) => Receita.fromJson(json))
         .toList()
-        .forEach((receita)=> receitaController.save(receita));
-    Receita a = receitaController.getAll()[1];
-    print([a.titulo,a.tempo,a.image,a.nIngredientes,a.index,a.preparo,a.tipo]);
+        .forEach((receita) => receitaController.save(receita));
+    Helper.goReplace(context, '/home_page');
+  }
 
+  void saveData(text) {
+    pathControler.save(text);
   }
 
   @override
   Widget build(BuildContext context) {
+    _fetchData();
+    // TODO: implement build
     return Scaffold(
-        appBar: AppBar(
-          title: Text("Fetch Data JSON"),
-        ),
-        bottomNavigationBar: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: RaisedButton(
-            child: new Text("Fetch Data"),
-            onPressed: _fetchData,
-          ),
-        ),
-        body: isLoading
-            ? Center(
-                child: CircularProgressIndicator(),
-              )
-            : Column(
-                children: [
-                  TextBar(
-                    texto: texto,
-                  ),
-                  GestureDetector(
-                    onTap: () => Helper.go(context, "/home_page"),
-                    child: TextBar(
-                      texto: "Voltar",
-                      size: 25,
-                    ),
-                  )
-                ],
-              ));
+      backgroundColor: Assets.blueColor,
+      body: Column(
+        children: [
 
+          Spacer(),
+          Image(image: Assets.IntelicipesLogo01, height: 50,),
+          Assets.smallPaddingBox,
+          Center(
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: new AlwaysStoppedAnimation(Assets.whiteColor),
+            ),
+          ),
+          Spacer(),
+          RaisedButton(
+            onPressed:() => Helper.go(context, '/home_page'),
+            child: Text("home_page"),
+          )
+        ],
+      ),
+    );
   }
 }
 

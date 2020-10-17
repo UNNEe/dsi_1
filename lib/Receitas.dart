@@ -20,10 +20,14 @@ class Receita {
 
   factory Receita.fromJson(Map<String, dynamic> json) {
     return Receita(
-        tempo: json['minutes'],
-        nIngredientes: json['n_ingredients'],
-        titulo: json['name'],
-        index: json['id']);
+      tempo: json['minutes'],
+      nIngredientes: json['n_ingredients'],
+      titulo: json['name'],
+      index: json['id'],
+      ingredientes: json['ingredients'],
+      preparo: json['steps']
+
+    );
   }
 }
 
@@ -68,6 +72,6 @@ class ReceitaController {
     return receita;
   }
   void clear(){
-    _receitas = [];
+    _receitas = <Receita>[];
   }
 }
